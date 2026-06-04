@@ -230,7 +230,22 @@ When a single webapp hosts cards for multiple pipelines:
 
 ### MCP deployment
 
-Use `mcp__claude_ai_OpenHEXA__update_static_webapp` with `files_json` as a JSON array of `{path, content}` objects to deploy. The `name` and `description` fields are silently ignored by the server — rename webapps from the OpenHEXA UI instead.
+Use `mcp__claude_ai_OpenHEXA__update_static_webapp` with `files_json` as a JSON array of `{path, content}` objects to deploy. On `update_static_webapp` the `name`/`description` fields are silently ignored by the server (rename webapps from the OpenHEXA UI instead); `create_static_webapp` **does** honor `name`.
+
+### Assembling `files_json` on Windows (PowerShell 5.1)
+
+Splitting an app into html+css+js just means a longer `files_json` array — OpenHEXA serves the
+bundle as documented (relative `<link>`/`<script>` resolve same-origin; only `index.html` is
+HTML-injected). The friction is building the JSON on Windows, not the deploy:
+
+- **Read as UTF-8 explicitly** — `Get-Content -Raw` defaults to ANSI and mangles non-ASCII
+  (`—`, emoji `📄🗂`, glyphs `✓✕⦸`) into mojibake. Use `Get-Content -Raw -Encoding UTF8`.
+- **Cast content to `[string]` before `ConvertTo-Json`** — otherwise the property serializes as
+  `{value, Count}` and balloons (~50×: a 20 KB bundle became 1.17 MB).
+- **`ConvertTo-Json` emits `<` `>` `&` `'` as escaped unicode sequences (`\uXXXX`), not
+  literal characters** — valid JSON, OpenHEXA parses and serves it fine. Don't "fix" it.
+
+Recipe: `@($files | % { [PSCustomObject]@{ path=$_; content=[string](Get-Content -Raw -Encoding UTF8 $_) } }) | ConvertTo-Json -Compress`
 
 ### Pipeline IDs are workspace-specific
 
