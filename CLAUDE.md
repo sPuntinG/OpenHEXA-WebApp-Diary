@@ -3,9 +3,9 @@
 ## Master plan
 
 The plan of action for the SNT Pipelines Orchestrator lives in `knowledge/PLAN.md` (phased,
-atomic tasks with owner tags) and its visual roadmap in `knowledge/ROADMAP.md`. **Read
+atomic tasks with owner tags). **Read
 `knowledge/PLAN.md` at the start of any session working toward the orchestrator**, and locate
-the task being worked on (e.g. "do T0.9") there before starting.
+the task being worked on (e.g. "do T1.2") there before starting.
 
 The plan is mirrored to Jira (project `SNT25`, Epic `SNT25-536`). `knowledge/JIRA_ITEMS.md`
 holds the full text of every Jira issue, the creation conventions, and a **resume runbook** —
@@ -28,7 +28,7 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/BLSQ/openhexa-app/main
 ## SNT Pipelines Orchestrator (end goal)
 
 The end goal of this project is a single, rich static webapp per workspace — the **SNT
-Pipelines Orchestrator** — that renders the *complete* flow diagram of all official SNT
+Pipelines Orchestrator** — that renders the _complete_ flow diagram of all official SNT
 pipelines (~20, from the `snt_development` repo) as an interactive 2D map with a
 configuration/run sidebar. The current small single-pipeline webapps are stepping stones
 toward it.
@@ -40,7 +40,7 @@ run) the data outputs and HTML report links. Node tags mark each pipeline as man
 alternative, or facultative.
 
 **The map is identical across all workspaces.** Every workspace's orchestrator shows the same
-full diagram. What differs per workspace is only which nodes are *active* — pipelines not
+full diagram. What differs per workspace is only which nodes are _active_ — pipelines not
 available in a given workspace appear greyed-out and unclickable.
 
 ### Data architecture
@@ -48,12 +48,12 @@ available in a given workspace appear greyed-out and unclickable.
 The orchestrator separates concerns across four files. The stable join key everywhere is the
 node `id` == the pipeline's Python function name (e.g. `snt_dhis2_extract`).
 
-| File | Scope | Holds |
-| ---- | ----- | ----- |
-| `pipeline_map.json` | **workspace-independent** (repo root, one shared file) | all nodes, grid position (`row`/`col`), `type`, mutex `group`, directed `edges` (dependencies) |
-| `<ws>/pipeline_cards.json` | per-workspace | which pipelines exist + `uuid` + `parameters` (drives *active vs greyed*) |
-| `<ws>/workspace_config.json` | per-workspace | IDs, `deployed_apps`, connection slugs |
-| `index.html` + `app.js` + `styles.css` | shared app shell (multi-file) | renders the map, merges it with the workspace cards, runs/polls pipelines |
+| File                                   | Scope                                                  | Holds                                                                                          |
+| -------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `pipeline_map.json`                    | **workspace-independent** (repo root, one shared file) | all nodes, grid position (`row`/`col`), `type`, mutex `group`, directed `edges` (dependencies) |
+| `<ws>/pipeline_cards.json`             | per-workspace                                          | which pipelines exist + `uuid` + `parameters` (drives _active vs greyed_)                      |
+| `<ws>/workspace_config.json`           | per-workspace                                          | IDs, `deployed_apps`, connection slugs                                                         |
+| `index.html` + `app.js` + `styles.css` | shared app shell (multi-file)                          | renders the map, merges it with the workspace cards, runs/polls pipelines                      |
 
 `pipeline_map_schema.json` (repo root) documents the structure of `pipeline_map.json` — read
 it when authoring or interpreting the map. The map is **hand-authored** (a separate task); it
@@ -63,10 +63,10 @@ is not generated from the GraphQL API.
 
 The webapp computes three independent state axes per node:
 
-- **available vs greyed** — *static*: a node is available iff its `id` is present in the
+- **available vs greyed** — _static_: a node is available iff its `id` is present in the
   workspace's `pipeline_cards.json` (with a `uuid`). Otherwise it renders greyed-out and is
   unclickable. This is how the same full map adapts to each workspace.
-- **locked vs unlocked** — *dynamic*: derived from `edges`. A node unlocks once every upstream
+- **locked vs unlocked** — _dynamic_: derived from `edges`. A node unlocks once every upstream
   prerequisite (each edge whose `to` equals this node) has a completed run in the current
   session.
 - **completed** — ran successfully in the current session.
@@ -93,10 +93,10 @@ Positions and arrows are **explicit**, with no graph-layout library or CDN depen
 
 OpenHEXA static webapps serve more than just `index.html`. Per the OpenHEXA docs:
 
-> *"`index.html` is the entry point; everything else (CSS, JS, images, JSON fixtures) is
+> _"`index.html` is the entry point; everything else (CSS, JS, images, JSON fixtures) is
 > served as-is from the same origin... Reference assets with relative paths
 > (`<script src="app.js">`, `<link href="style.css">`). The injection only touches `text/html`
-> responses; CSS, JS, and JSON files are untouched."*
+> responses; CSS, JS, and JSON files are untouched."_
 
 So the orchestrator is a **multi-file bundle**, not one giant file:
 
@@ -157,12 +157,12 @@ If a query fails with a permission error in the webapp, a scope is missing. The 
 
 ### Reading last-run status for all pipelines (cross-session status board)
 
-**Confirmed working through the static-webapp proxy under `PIPELINES_READ` alone** (spike T0.9,
+**Confirmed working through the static-webapp proxy under `PIPELINES_READ` alone** (status spike — PLAN.md task T0.6,
 verified live in `snt-testing`: a pipeline triggered in the OH UI showed up as `running` on the
 next app refresh). This is the query that powers the read-only status board.
 
 Pipelines are fetched via the **top-level `pipelines(workspaceSlug:…)` query** — note the
-`Workspace` type has **no** `pipelines` field, so `workspace { pipelines }` does *not* parse.
+`Workspace` type has **no** `pipelines` field, so `workspace { pipelines }` does _not_ parse.
 Pass `window.OPENHEXA.workspaceSlug` as the slug. Each `Pipeline` exposes `runs(...)`; ask for
 the single most-recent run with `orderBy: EXECUTION_DATE_DESC, perPage: 1`.
 
@@ -176,7 +176,12 @@ query ($ws: String!) {
       name
       runs(orderBy: EXECUTION_DATE_DESC, page: 1, perPage: 1) {
         totalItems
-        items { id status executionDate duration }
+        items {
+          id
+          status
+          executionDate
+          duration
+        }
       }
     }
   }
@@ -185,7 +190,7 @@ query ($ws: String!) {
 
 `PipelineRunStatus` values: `queued`, `running`, `success`, `failed`, `stopped`, `skipped`,
 `terminating`. A pipeline with no runs returns an empty `runs.items` array (render as greyed /
-"no runs"). This is the *list* status query; to poll a single run you triggered for its outputs,
+"no runs"). This is the _list_ status query; to poll a single run you triggered for its outputs,
 use the `pipelineRun(id:)` query below.
 
 ### Running a pipeline
@@ -405,7 +410,7 @@ When building or updating `<workspace>/<app_key>/index.html`:
 5. Write the deployed file(s) to `<workspace>/<app_key>/`.
 
 > For the **SNT Pipelines Orchestrator** specifically, follow the multi-file architecture in
-> *SNT Pipelines Orchestrator (end goal)* above: the map (`pipeline_map.json`, validated
+> _SNT Pipelines Orchestrator (end goal)_ above: the map (`pipeline_map.json`, validated
 > against `pipeline_map_schema.json`) supplies layout and dependencies, the workspace's
 > `pipeline_cards.json` supplies which nodes are active plus their params/UUIDs, and the app
 > is deployed as a bundle rather than a single inlined `index.html`.

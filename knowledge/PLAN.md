@@ -80,32 +80,29 @@ have *confirmed* the status query works through the static-webapp proxy.
 ### Gate — validate the product before building
 
 - **T0.0 — Validate the product spec** · 🤿 + 👔 + 🛠️ · Dep: —
-  Review `knowledge/PRODUCT_SPEC.md` with the **PM** (sections 1–7 + open questions in §9),
-  then check **technical feasibility with the OH devs** (§8). Capture answers back into the
-  spec and the logs below.
-  *Done when:* §9 open questions are resolved and every §8 feasibility item has a dev ✅/⚠️.
+  Review `knowledge/PRODUCT_SPEC.md` with the **PM** — the product/UX sections and the "Open
+  questions for the PM" list — then check **technical feasibility with the OH devs** (the
+  "Technical feasibility" checklist, items F1–F8). Capture answers back into the spec and the
+  logs below.
+  *Done when:* the PM's open questions are resolved and every technical-feasibility item
+  (F1–F8) has a dev ✅/⚠️.
   *Giulia learns:* how to turn a brain-dump into a stakeholder-ready spec and de-risk a product
   before writing code.
 
 ### Track A — Workspace setup
 
-- **T0.1 — Create the "SNT App Dev" workspace** · 🤿 · Dep: —
-  Create the workspace in OpenHEXA. Record its **slug** (likely `snt-app-dev`).
-  *Done when:* the workspace exists and Giulia can share its slug.
+- **T0.1 — Set up the SNT App Dev workspace** · 🤿 (🛠️ if blocked) · Dep: —
+  Stand up the dedicated "SNT App Dev" workspace so there is a stable, fully-populated
+  environment with real pipeline status to build against. Work the checklist in order:
+  - [ ] Create the "SNT App Dev" workspace in OpenHEXA; record its slug (likely `snt-app-dev`).
+  - [ ] Install every official SNT pipeline (from templates) into the workspace (~20).
+  - [ ] Set up the DHIS2/other connections, `SNT_config.json`, and the input data each pipeline needs.
+  - [ ] Run each installed pipeline once, so there is real status + outputs for the board.
+  *Done when:* all four boxes are ticked — workspace exists (slug shared), ~20 pipelines
+  installed, a manual A.1 → A.2 run succeeds end-to-end, and each pipeline has at least one
+  terminal run (ideally `success`).
 
-- **T0.2 — Install all official SNT pipelines** · 🤿 · Dep: T0.1
-  Install every official SNT pipeline (from templates) into the new workspace.
-  *Done when:* the Pipelines section lists all ~20.
-
-- **T0.3 — Configure connections, config & input data** · 🤿 (🛠️ if blocked) · Dep: T0.1
-  Set up DHIS2/other connections, `SNT_config.json`, and the input data each pipeline needs.
-  *Done when:* a manual run of A.1 → A.2 succeeds end-to-end.
-
-- **T0.4 — Run every pipeline once (successfully)** · 🤿 · Dep: T0.2, T0.3
-  Trigger each pipeline so there is *real* status + outputs for the board to display.
-  *Done when:* each pipeline has at least one terminal run (ideally `success`).
-
-- **T0.5 — Generate workspace config + cards** · 🤖 (with 🤿) · Dep: T0.2
+- **T0.2 — Generate workspace config + cards** · 🤖 (with 🤿) · Dep: T0.1
   Create `snt_app_dev/workspace_config.json` (UUIDs, connection slugs, app id) and
   `snt_app_dev/pipeline_cards.json` (catalog + params), per the existing schemas/instructions
   in `CLAUDE.md`.
@@ -113,7 +110,7 @@ have *confirmed* the status query works through the static-webapp proxy.
 
 ### Track B — The map (the long pole)
 
-- **T0.6 — Consolidate the full map content** · 🤿 + 👔 · Dep: —
+- **T0.3 — Consolidate the full map content** · 🤿 + 👔 · Dep: —
   Gather the complete pipeline list and the *intended* layout into one sketch: for every
   pipeline — execution stage (`row`), horizontal track (`col`), `type`
   (mandatory/alternative/facultative), mutex `group`, and dependency `edges`. Pull in
@@ -122,12 +119,12 @@ have *confirmed* the status query works through the static-webapp proxy.
   *Done when:* there is one agreed sketch (paper/diagram/table) covering all pipelines.
   *Giulia learns:* how the map's data model (`row`/`col`/`edges`/`group`) drives the whole app.
 
-- **T0.7 — Translate the sketch into `pipeline_map.json`** · 🤖 · Dep: T0.6
+- **T0.4 — Translate the sketch into `pipeline_map.json`** · 🤖 · Dep: T0.3
   Turn the sketch into a schema-valid `pipeline_map.json` (repo root, shared across all
   workspaces) and validate it against `pipeline_map_schema.json`.
   *Done when:* the file validates and every node `id` matches a pipeline function name.
 
-- **T0.8 — Review the rendered layout** · 🤿 + 👔 · Dep: T0.7, T1.2, T1.3
+- **T0.5 — Review the rendered layout** · 🤿 + 👔 · Dep: T0.4, T1.2, T1.3
   Once the grid + arrows render (Phase 1), sanity-check positions and edges against the sketch.
   *Done when:* the on-screen map matches the agreed flow.
 
@@ -135,7 +132,7 @@ have *confirmed* the status query works through the static-webapp proxy.
 
 > A *spike* is a small throwaway experiment to answer one risky question before you build on it.
 
-- **T0.9 — Spike: does the status query work through the proxy?** · 🤖 + 🤿 · Dep: T0.1 (any ws with runs)
+- **T0.6 — Spike: does the status query work through the proxy?** · 🤖 + 🤿 · Dep: —
   ✅ **DONE (2026-06-08).** Deployed throwaway app `t0-9-status-proxy-spike` to `snt-testing`
   (scope `PIPELINES_READ` only). It returned real last-run statuses for all pipelines;
   manually triggering a pipeline in the OH UI then refreshing showed it as `running`.
@@ -143,14 +140,14 @@ have *confirmed* the status query works through the static-webapp proxy.
   Correction to the original sketch: the `Workspace` type has no `pipelines` field, so the
   query uses the top-level `pipelines(workspaceSlug:…)` query → `items { runs(orderBy:
   EXECUTION_DATE_DESC, perPage:1) }`. Working query documented in `CLAUDE.md`. Local mirror:
-  `snt_testing/status_spike/index.html`.
+  `snt_testing/status_spike/index.html`. (Deployed artifact keeps its original `t0-9` name.)
   *Done when:* ~~the test app prints real statuses for several pipelines~~ ✅ — and live status
   transitions are reflected on refresh.
   *Giulia learns:* the proxy + `allowed_operations` model, and how to verify an assumption
   cheaply before committing to it.
 
-- **T0.10 — If blocked: precise ask to OH devs** · 🛠️ · Dep: T0.9
-  ✅ **RESOLVED — not blocked.** T0.9 succeeded, so no OH-devs ticket is needed; instead the
+- **T0.7 — If blocked: precise ask to OH devs** · 🛠️ · Dep: T0.6
+  ✅ **RESOLVED — not blocked.** T0.6 succeeded, so no OH-devs ticket is needed; instead the
   confirmed working query is documented in `CLAUDE.md` (*"Reading last-run status for all
   pipelines"*).
   *Done when:* ~~status retrieval is either working or has an owned ticket~~ ✅ working.
@@ -165,7 +162,7 @@ node opens a read-only detail panel. **No Run button, no locking yet.**
 **Exit criteria:** deployed to SNT App Dev, statuses match what Giulia sees in the OpenHEXA UI,
 reviewed by Giulia + PM.
 
-- **T1.1 — Scaffold the app bundle** · 🤖 · Dep: T0.5, T0.7
+- **T1.1 — Scaffold the app bundle** · 🤖 · Dep: T0.2, T0.4
   Create `snt_app_dev/orchestrator/` with `index.html` + `styles.css` + `app.js`, cloned from
   the proven split app (`snt_testing/population_transformation_split/`). `app.js` fetches
   `./pipeline_map.json` and `./pipeline_cards.json`.
@@ -186,7 +183,7 @@ reviewed by Giulia + PM.
   greyed-out and unclickable.
   *Done when:* missing pipelines show greyed; installed ones show active.
 
-- **T1.5 — Live status layer** · 🤖 · Dep: T1.1, T0.9
+- **T1.5 — Live status layer** · 🤖 · Dep: T1.1, T0.6
   For each available node, fetch its latest run; show a status badge + last-run datetime, and
   a link to that run's page in the OpenHEXA UI.
   *Done when:* statuses on the board match the OpenHEXA Pipelines view after a reload.
@@ -216,7 +213,7 @@ that node's status and outputs.
 
 **Exit criteria:** Giulia can run any available pipeline from the board and watch it complete.
 
-- **T2.1 — Confirm params aren't stale** · 🤿 + 🤖 · Dep: T0.5
+- **T2.1 — Confirm params aren't stale** · 🤿 + 🤖 · Dep: T0.2
   Per the `CLAUDE.md` cache caveat: before wiring runs, re-fetch the `@parameter` decorators
   for the pipelines to be run and patch any drift into `pipeline_cards.json`.
   *Done when:* card params match the current GitHub source for each runnable pipeline.
@@ -304,13 +301,13 @@ Add entries as they come up; mark resolved ones.
 - **[OPEN]** Does `pipelineRun` expose everything needed for the outputs links on a *historical*
   run (not just one you triggered)? *Owner: 🤖 verify during T1.5.*
 - **[OPEN]** Final node count and any pipelines beyond the A.x set in the prototype.
-  *Owner: 🤿 + 👔 during T0.6.*
+  *Owner: 🤿 + 👔 during T0.3.*
 
 ## MCP / platform gaps to raise with OH devs
 
 Track here anything the platform/MCP can't currently do, so the OH team can work in parallel.
 
 - **[RESOLVED ✅]** Status query (`pipelines(workspaceSlug:…) { items { runs } }`) through the
-  static-webapp proxy under `PIPELINES_READ` — **confirmed working** in T0.9 (2026-06-08). No
+  static-webapp proxy under `PIPELINES_READ` — **confirmed working** in T0.6 (2026-06-08). No
   ticket needed.
 - *(add more as discovered)*
