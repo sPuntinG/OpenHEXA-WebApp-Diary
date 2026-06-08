@@ -137,7 +137,7 @@ rests on; each needs a dev ✅ / ⚠️.
 | F8 | **Required `allowed_operations` scopes** | At minimum `PIPELINES_READ, PIPELINES_RUN, FILES_READ` (+`USER_READ` if listing connections) | Confirm the final set |
 
 > The single highest-risk item is **F1** — it underpins the whole "see status at a glance"
-> value. It is being verified first via a small throwaway test app (see `PLAN.md`, task T0.9).
+> value. It is being verified first via a small throwaway test app (see `PLAN.md`, task T0.6).
 
 ---
 
