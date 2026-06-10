@@ -35,10 +35,10 @@
   }
   .legend .group { display: flex; gap: 8px; align-items: center; }
   .swatch { width: 26px; height: 16px; border-radius: 4px; border: 2px solid; display: inline-block; }
-  .sw-mandatory   { background: #ede7f6; border-color: #7e57c2; }
-  .sw-alternative { background: #e3f2fd; border-color: #1e88e5; }
-  .sw-output      { background: #e8f5e9; border-color: #43a047; }
-  .sw-facultative { background: #f5f5f5; border-color: #9e9e9e; }
+  .sw-A { background: #e3f2fd; border-color: #1e88e5; }
+  .sw-B { background: #e8f5e9; border-color: #43a047; }
+  .sw-C { background: #fff3e0; border-color: #fb8c00; }
+  .sw-D { background: #f3e5f5; border-color: #8e24aa; }
   .lineicon { width: 34px; height: 0; border-top: 2px solid var(--line); display: inline-block; }
   .lineicon.opt { border-top: 2px dashed var(--line-opt); }
   .scroller { overflow: auto; padding: 24px 28px 60px; }
@@ -67,11 +67,24 @@
     background: rgba(0,0,0,.06);
   }
   .node .lbl { font-weight: 600; }
-  .node.mandatory   { background: #ede7f6; border-color: #7e57c2; }
-  .node.alternative { background: #e3f2fd; border-color: #1e88e5; }
-  .node.output      { background: #e8f5e9; border-color: #43a047; }
-  .node.facultative { background: #f5f5f5; border-color: #9e9e9e; }
-  .grouplabel { font-size: 11px; font-weight: 700; fill: #1e88e5; letter-spacing: .3px; }
+  .node.track-A { background: #e3f2fd; border-color: #1e88e5; }
+  .node.track-B { background: #e8f5e9; border-color: #43a047; }
+  .node.track-C { background: #fff3e0; border-color: #fb8c00; }
+  .node.track-D { background: #f3e5f5; border-color: #8e24aa; }
+  .type-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #455a64;
+    color: #fff;
+  }
+  .grouplabel { font-size: 11px; font-weight: 700; fill: #546e7a; letter-spacing: .3px; }
   .notes {
     margin: 0 28px 28px;
     padding: 14px 16px;
@@ -91,11 +104,12 @@
   <h1>SNT Pipeline Map <span class="sub" id="version"></span></h1>
   <div class="sub">Workspace-independent flow of the official SNT pipelines &mdash; visual reference for review. Hover a node for its description.</div>
   <div class="legend">
-    <div class="group"><b>Type:</b></div>
-    <div class="group"><span class="swatch sw-mandatory"></span> Mandatory</div>
-    <div class="group"><span class="swatch sw-alternative"></span> Alternative (choose one)</div>
-    <div class="group"><span class="swatch sw-output"></span> Output (feeds SNT Explorer)</div>
-    <div class="group"><span class="swatch sw-facultative"></span> Facultative</div>
+    <div class="group"><b>Track:</b></div>
+    <div class="group"><span class="swatch sw-A"></span> A · DHIS2</div>
+    <div class="group"><span class="swatch sw-B"></span> B · WorldPop + MAP</div>
+    <div class="group"><span class="swatch sw-C"></span> C · DHS</div>
+    <div class="group"><span class="swatch sw-D"></span> D · ERA5</div>
+    <div class="group" style="margin-left:10px"><span class="type-badge" style="position:static">type</span> shown top-right of each card</div>
     <div class="group" style="margin-left:10px"><span class="lineicon"></span> Hard dependency</div>
     <div class="group"><span class="lineicon opt"></span> Optional link</div>
   </div>
@@ -229,8 +243,8 @@ Object.entries(groups).forEach(([gid, members]) => {
   rect.setAttribute("x", left); rect.setAttribute("y", top);
   rect.setAttribute("width", right - left); rect.setAttribute("height", bottom - top);
   rect.setAttribute("rx", 10);
-  rect.setAttribute("fill", "rgba(30,136,229,0.05)");
-  rect.setAttribute("stroke", "#1e88e5");
+  rect.setAttribute("fill", "rgba(84,110,122,0.05)");
+  rect.setAttribute("stroke", "#546e7a");
   rect.setAttribute("stroke-dasharray", "5,4");
   rect.setAttribute("stroke-width", "1.3");
   svg.appendChild(rect);
@@ -264,7 +278,7 @@ canvas.appendChild(svg);
 /* ---- node boxes (on top) ---- */
 MAP.nodes.forEach(n => {
   const div = document.createElement("div");
-  div.className = "node " + n.type;
+  div.className = "node track-" + n.track;
   div.style.left = nx(n) + "px";
   div.style.top = ny(n) + "px";
   div.style.width = NODE_W + "px";
@@ -272,15 +286,18 @@ MAP.nodes.forEach(n => {
   div.title = (n.description || "") + "\n\n[" + n.type + "]  id: " + n.id;
   // strip the leading code from the label to avoid duplication with the pill
   const lblText = n.label.replace(new RegExp("^" + n.code.replace(".", "\\.") + "\\s*"), "");
-  div.innerHTML = '<span class="code">' + n.code + '</span><div class="lbl">' + lblText + '</div>';
+  div.innerHTML = '<span class="type-badge">' + n.type + '</span>' +
+                  '<span class="code">' + n.code + '</span>' +
+                  '<div class="lbl">' + lblText + '</div>';
   canvas.appendChild(div);
 });
 
 /* ---- header + notes ---- */
 document.getElementById("version").textContent = "· v" + MAP.version;
 document.getElementById("notes").innerHTML =
-  '<b>How to read this map.</b> Rows = execution stage (top &rarr; bottom); columns separate the parallel tracks ' +
-  '(A = DHIS2, B = WorldPop + MAP, C = DHS, D = ERA5). ' +
+  '<b>How to read this map.</b> Rows = execution stage (top &rarr; bottom); columns separate the parallel tracks. ' +
+  'Cards are <b>coloured by track</b> (A = DHIS2, B = WorldPop + MAP, C = DHS, D = ERA5); each card\'s ' +
+  '<b>type</b> (mandatory / alternative / output / facultative) is shown as a badge in its top-right corner. ' +
   '<b>Solid arrow</b> = hard dependency: the upstream pipeline must have run first. ' +
   '<b>Dashed arrow</b> = optional link: the output is used if present, but the downstream pipeline can also run without it. ' +
   'Dashed boxes group <b>alternative</b> pipelines &mdash; run one (running another overrides it). ' +
